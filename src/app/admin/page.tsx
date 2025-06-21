@@ -206,7 +206,7 @@ export default function AdminPage() {
       <div className="min-h-screen flex w-full">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} handleLogout={handleLogout} />
         <SidebarInset className="flex-1">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+          <header className="flex h-16 shrink-0 items-center gap-2 px-4 bg-white">
             <SidebarTrigger className="-ml-1" />
             <div className="flex items-center space-x-3">
               <h1 className="text-xl font-bold text-[#2563eb]">

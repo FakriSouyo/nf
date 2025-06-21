@@ -69,13 +69,13 @@ export default function NotificationDropdown({ onClose, onNotificationRead }: No
   const getNotificationColor = (type: string) => {
     switch (type) {
       case "reward":
-        return "bg-green-50 border-green-200"
+        return "bg-green-50/80 dark:bg-green-950/30"
       case "order":
-        return "bg-blue-50 border-blue-200"
+        return "bg-blue-50/80 dark:bg-blue-950/30"
       case "promotion":
-        return "bg-orange-50 border-orange-200"
+        return "bg-orange-50/80 dark:bg-orange-950/30"
       default:
-        return "bg-gray-50 border-gray-200"
+        return "bg-gray-50/80 dark:bg-gray-950/30"
     }
   }
 
@@ -110,13 +110,13 @@ export default function NotificationDropdown({ onClose, onNotificationRead }: No
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       {/* Dropdown */}
-      <Card className="absolute right-0 bottom-12 w-80 max-h-96 overflow-y-auto z-50 shadow-2xl border-0">
+      <Card className="absolute right-0 bottom-12 w-80 max-h-96 overflow-y-auto z-50 shadow-2xl border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <CardContent className="p-0">
-          <div className="p-4 border-b border-gray-100">
-            <h3 className="font-bold text-gray-900">Notifications</h3>
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <h3 className="font-bold text-gray-900 dark:text-gray-100">Notifications</h3>
           </div>
 
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto notifications-scroll">
             {notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
@@ -154,11 +154,11 @@ export default function NotificationDropdown({ onClose, onNotificationRead }: No
         <DialogContent className="sm:max-w-md">
           {selectedNotification && (
             <div className="space-y-4">
-              <div className={`p-4 rounded-lg ${getNotificationColor(selectedNotification.type)}`}>
-                <p className="text-gray-700">{selectedNotification.message}</p>
+              <div className={`p-4 rounded-lg border border-gray-200 dark:border-gray-800 ${getNotificationColor(selectedNotification.type)}`}>
+                <p className="text-gray-700 dark:text-gray-300">{selectedNotification.message}</p>
               </div>
 
-              <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>
                   Received:{" "}
                   {selectedNotification.date.toLocaleDateString("id-ID", {

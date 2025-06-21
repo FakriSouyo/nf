@@ -128,9 +128,12 @@ body {
 .grid-pattern {
   width: 100%;
   height: 100%;
-  background-image: linear-gradient(#2563eb 1px, transparent 1px), linear-gradient(90deg, #2563eb 1px, transparent 1px);
+  background-image: 
+    linear-gradient(rgba(160, 160, 160, 0.15) 1px, transparent 1px), 
+    linear-gradient(90deg, rgba(160, 160, 160, 0.15) 1px, transparent 1px);
   background-size: 50px 50px;
   animation: grid-move 20s linear infinite;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.03);
 }
 
 @keyframes grid-move {
@@ -266,6 +269,40 @@ html {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Hide scrollbar but keep functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Custom scrollbar for notifications */
+.notifications-scroll {
+  max-height: calc(85vh - 4rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.notifications-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notifications-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notifications-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.dark .notifications-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Improve sticker positioning */

@@ -113,6 +113,17 @@ export default function AdminDashboard() {
     available: true,
   })
 
+  const [formVoucher, setFormVoucher] = useState({
+    id: "",
+    title: "",
+    discount: "",
+    active: true,
+  })
+
+  const [showAddVoucherDialog, setShowAddVoucherDialog] = useState(false)
+  const [showEditVoucherDialog, setShowEditVoucherDialog] = useState(false)
+  const [editingVoucher, setEditingVoucher] = useState(null)
+
   const stats = {
     monthlyOrders: 156,
     dailyOrders: 8,
@@ -217,6 +228,60 @@ export default function AdminDashboard() {
       available: reward.available,
     })
     setShowEditRewardDialog(true)
+  }
+
+  const handleAddVoucher = () => {
+    const newVoucher = {
+      id: Date.now(),
+      title: formVoucher.title,
+      discount: formVoucher.discount,
+      active: formVoucher.active,
+    }
+    setVouchers([...vouchers, newVoucher])
+    setShowAddVoucherDialog(false)
+    resetVoucherForm()
+  }
+
+  const handleEditVoucher = () => {
+    if (!editingVoucher) return
+    const updatedVouchers = vouchers.map((voucher) =>
+      voucher.id === editingVoucher.id
+        ? {
+            ...voucher,
+            title: formVoucher.title,
+            discount: formVoucher.discount,
+            active: formVoucher.active,
+          }
+        : voucher
+    )
+    setVouchers(updatedVouchers)
+    setShowEditVoucherDialog(false)
+    setEditingVoucher(null)
+    resetVoucherForm()
+  }
+
+  const handleDeleteVoucher = (id) => {
+    setVouchers(vouchers.filter((voucher) => voucher.id !== id))
+  }
+
+  const resetVoucherForm = () => {
+    setFormVoucher({
+      id: "",
+      title: "",
+      discount: "",
+      active: true,
+    })
+  }
+
+  const openEditVoucherDialog = (voucher) => {
+    setEditingVoucher(voucher)
+    setFormVoucher({
+      id: voucher.id,
+      title: voucher.title,
+      discount: voucher.discount,
+      active: voucher.active,
+    })
+    setShowEditVoucherDialog(true)
   }
 
   return (
@@ -536,7 +601,11 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-bold text-gray-900">This Week's Vouchers</h3>
-              <Button size="sm" className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
+              <Button 
+                size="sm" 
+                onClick={() => setShowAddVoucherDialog(true)} 
+                className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Voucher
               </Button>
@@ -561,10 +630,15 @@ export default function AdminDashboard() {
                           {voucher.active ? "Active" : "Inactive"}
                         </span>
                       </button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => openEditVoucherDialog(voucher)}>
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" className="text-red-600 border-red-300">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-red-600 border-red-300"
+                        onClick={() => handleDeleteVoucher(voucher.id)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -858,6 +932,129 @@ export default function AdminDashboard() {
               <Button
                 onClick={handleEditReward}
                 disabled={!rewardForm.name || !rewardForm.pointsCost}
+                className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Voucher Dialog */}
+      <Dialog open={showAddVoucherDialog} onOpenChange={setShowAddVoucherDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Add New Voucher</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="voucherTitle">Voucher Title</Label>
+              <Input
+                id="voucherTitle"
+                value={formVoucher.title}
+                onChange={(e) => setFormVoucher({ ...formVoucher, title: e.target.value })}
+                placeholder="Enter voucher title"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="voucherDiscount">Discount</Label>
+              <Input
+                id="voucherDiscount"
+                value={formVoucher.discount}
+                onChange={(e) => setFormVoucher({ ...formVoucher, discount: e.target.value })}
+                placeholder="e.g. 20% or FREE"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="voucherActive"
+                checked={formVoucher.active}
+                onChange={(e) => setFormVoucher({ ...formVoucher, active: e.target.checked })}
+              />
+              <Label htmlFor="voucherActive">Active</Label>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => {
+                  setShowAddVoucherDialog(false)
+                  resetVoucherForm()
+                }}
+                variant="outline"
+                className="flex-1 text-gray-600 border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddVoucher}
+                disabled={!formVoucher.title || !formVoucher.discount}
+                className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+              >
+                Add Voucher
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Voucher Dialog */}
+      <Dialog open={showEditVoucherDialog} onOpenChange={setShowEditVoucherDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Edit Voucher</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="editVoucherTitle">Voucher Title</Label>
+              <Input
+                id="editVoucherTitle"
+                value={formVoucher.title}
+                onChange={(e) => setFormVoucher({ ...formVoucher, title: e.target.value })}
+                placeholder="Enter voucher title"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="editVoucherDiscount">Discount</Label>
+              <Input
+                id="editVoucherDiscount"
+                value={formVoucher.discount}
+                onChange={(e) => setFormVoucher({ ...formVoucher, discount: e.target.value })}
+                placeholder="e.g. 20% or FREE"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="editVoucherActive"
+                checked={formVoucher.active}
+                onChange={(e) => setFormVoucher({ ...formVoucher, active: e.target.checked })}
+              />
+              <Label htmlFor="editVoucherActive">Active</Label>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => {
+                  setShowEditVoucherDialog(false)
+                  setEditingVoucher(null)
+                  resetVoucherForm()
+                }}
+                variant="outline"
+                className="flex-1 text-gray-600 border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditVoucher}
+                disabled={!formVoucher.title || !formVoucher.discount}
                 className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
               >
                 Save Changes
