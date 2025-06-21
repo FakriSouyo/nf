@@ -22,19 +22,25 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar"
 
-import { LayoutDashboard, ShoppingBag, Coffee, Settings, LogOut, Gift } from "lucide-react"
+import { LayoutDashboard, ShoppingBag, Coffee, Settings, LogOut, Gift, Menu } from "lucide-react"
 
 import AdminDashboard from "@/components/admin/admin-dashboard"
 import AdminOrders from "@/components/admin/admin-orders"
 import AdminProfile from "@/components/admin/admin-profile"
 import AdminCashier from "@/components/admin/admin-cashier"
 import AdminRedemptions from "@/components/admin/admin-redemptions"
+import AdminMenu from "@/components/admin/admin-menu"
 
 const menuItems = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
     id: "dashboard",
+  },
+  {
+    title: "Menu",
+    icon: Menu,
+    id: "menu",
   },
   {
     title: "Orders",
@@ -216,6 +222,7 @@ export default function AdminPage() {
           </header>
           <main className="flex-1 overflow-auto">
             {activeTab === "dashboard" && <AdminDashboard />}
+            {activeTab === "menu" && <AdminMenu />}
             {activeTab === "orders" && <AdminOrders />}
             {activeTab === "cashier" && <AdminCashier />}
             {activeTab === "redemptions" && <AdminRedemptions />}

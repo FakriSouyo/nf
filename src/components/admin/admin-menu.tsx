@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog"
 import { Plus, Edit, Trash2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface MenuItem {
   id: number
@@ -19,6 +20,7 @@ interface MenuItem {
   image: string
   category: "signature" | "nonCoffee" | "snacks"
   popular: boolean
+  isDraft: boolean
 }
 
 const initialMenuItems: MenuItem[] = [
@@ -30,6 +32,7 @@ const initialMenuItems: MenuItem[] = [
     image: "/placeholder.svg?height=200&width=200",
     category: "signature",
     popular: true,
+    isDraft: false,
   },
   {
     id: 2,
@@ -39,6 +42,7 @@ const initialMenuItems: MenuItem[] = [
     image: "/placeholder.svg?height=200&width=200",
     category: "signature",
     popular: false,
+    isDraft: false,
   },
   {
     id: 4,
@@ -48,6 +52,7 @@ const initialMenuItems: MenuItem[] = [
     image: "/placeholder.svg?height=200&width=200",
     category: "nonCoffee",
     popular: true,
+    isDraft: true,
   },
   {
     id: 7,
@@ -57,6 +62,7 @@ const initialMenuItems: MenuItem[] = [
     image: "/placeholder.svg?height=200&width=200",
     category: "snacks",
     popular: false,
+    isDraft: false,
   },
 ]
 
@@ -66,18 +72,20 @@ export default function AdminMenu() {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [activeCategory, setActiveCategory] = useState<"signature" | "nonCoffee" | "snacks">("signature")
+  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published">("all")
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     image: "",
-    imageFile: null,
-    category: "signature" as const,
+    imageFile: null as File | null,
+    category: "signature" as MenuItem["category"],
     popular: false,
+    isDraft: false,
   })
 
-  const handleImageUpload = (file) => {
+  const handleImageUpload = (file: File) => {
     if (file && file.size <= 10 * 1024 * 1024) {
       // 10MB limit
       const imageUrl = URL.createObjectURL(file)
@@ -98,6 +106,7 @@ export default function AdminMenu() {
       image: formData.image || "/placeholder.svg?height=200&width=200",
       category: formData.category,
       popular: formData.popular,
+      isDraft: formData.isDraft,
     }
     setMenuItems([...menuItems, newItem])
     setShowAddDialog(false)
@@ -116,6 +125,7 @@ export default function AdminMenu() {
             image: formData.image || item.image,
             category: formData.category,
             popular: formData.popular,
+            isDraft: formData.isDraft,
           }
         : item,
     )
@@ -138,6 +148,7 @@ export default function AdminMenu() {
       imageFile: null,
       category: "signature",
       popular: false,
+      isDraft: false,
     })
   }
 
@@ -151,24 +162,44 @@ export default function AdminMenu() {
       imageFile: null,
       category: item.category,
       popular: item.popular,
+      isDraft: item.isDraft,
     })
     setShowEditDialog(true)
   }
 
-  const filteredItems = menuItems.filter((item) => item.category === activeCategory)
+  const filteredItems = menuItems.filter((item) => {
+    const categoryMatch = item.category === activeCategory
+    if (filterStatus === "all") return categoryMatch
+    if (filterStatus === "draft") return categoryMatch && item.isDraft
+    if (filterStatus === "published") return categoryMatch && !item.isDraft
+    return categoryMatch
+  })
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center space-x-3">
           <h1 className="text-3xl md:text-4xl font-bold text-[#2563eb]">Menu Management</h1>
           <Image src="/cat-thumbs-up.png" alt="Menu Cat" width={40} height={40} className="w-10 h-10" />
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Item
-        </Button>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex items-center space-x-2">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as "all" | "draft" | "published")}
+              className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Items</option>
+              <option value="draft">Drafts</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+          <Button onClick={() => setShowAddDialog(true)} className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Item
+          </Button>
+        </div>
       </div>
 
       {/* Category Tabs */}
@@ -220,9 +251,16 @@ export default function AdminMenu() {
                     className="w-full h-full object-cover rounded-xl"
                   />
                 </div>
-                {item.popular && (
-                  <Badge className="absolute top-3 left-3 bg-orange-500 text-white hover:bg-orange-500">Popular</Badge>
-                )}
+                <div className="absolute top-3 left-3 flex gap-2">
+                  {item.popular && (
+                    <Badge className="bg-orange-500 text-white hover:bg-orange-500">Popular</Badge>
+                  )}
+                  {item.isDraft && (
+                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                      Draft
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h3>
@@ -258,7 +296,7 @@ export default function AdminMenu() {
       {/* Add Item Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="space-y-3">
             <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Add New Menu Item</DialogTitle>
           </DialogHeader>
 
@@ -356,6 +394,16 @@ export default function AdminMenu() {
               <Label htmlFor="popular">Mark as Popular</Label>
             </div>
 
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isDraft"
+                checked={formData.isDraft}
+                onChange={(e) => setFormData({ ...formData, isDraft: e.target.checked })}
+              />
+              <Label htmlFor="isDraft">Save as Draft</Label>
+            </div>
+
             <div className="flex space-x-3">
               <Button
                 onClick={() => {
@@ -382,7 +430,7 @@ export default function AdminMenu() {
       {/* Edit Item Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="space-y-3">
             <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Edit Menu Item</DialogTitle>
           </DialogHeader>
 
@@ -478,6 +526,16 @@ export default function AdminMenu() {
                 onChange={(e) => setFormData({ ...formData, popular: e.target.checked })}
               />
               <Label htmlFor="editPopular">Mark as Popular</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="editIsDraft"
+                checked={formData.isDraft}
+                onChange={(e) => setFormData({ ...formData, isDraft: e.target.checked })}
+              />
+              <Label htmlFor="editIsDraft">Save as Draft</Label>
             </div>
 
             <div className="flex space-x-3">
