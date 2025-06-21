@@ -49,15 +49,10 @@ export default function AdminProfile({ onLogout }: AdminProfileProps) {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-4 md:p-8">
-      {/* Header - Desktop only */}
-      <div className="hidden md:block mb-8">
+      {/* Header */}
+      <div className="flex items-center space-x-3 mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-[#2563eb]">Admin Profile</h1>
-      </div>
-
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center space-x-3 mb-8">
-        <h1 className="text-3xl font-bold text-[#2563eb]">Admin Profile</h1>
-        <Image src="/cat-welcome.png" alt="Admin Cat" width={40} height={40} className="w-10 h-10" />
+        <Image src="/cat-mascot.png" alt="Admin Cat" width={40} height={40} className="w-10 h-10" />
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">

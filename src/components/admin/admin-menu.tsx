@@ -3,564 +3,199 @@
 import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog"
-import { Plus, Edit, Trash2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Plus, ChevronDown } from "lucide-react"
+import MenuItemCard from "./menu/menu-item-card"
+import AddItemDialog from "./menu/add-item-dialog"
+import EditItemDialog from "./menu/edit-item-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface MenuItem {
-  id: number
+  id: string
   name: string
   description: string
-  price: number
+  price: string
   image: string
   category: "signature" | "nonCoffee" | "snacks"
   popular: boolean
   isDraft: boolean
 }
 
+// Demo data
 const initialMenuItems: MenuItem[] = [
   {
-    id: 1,
-    name: "Nefo Original",
-    description: "Kopi original buatan nefo",
-    price: 8000,
-    image: "/placeholder.svg?height=200&width=200",
+    id: "1",
+    name: "Espresso",
+    description: "Strong black coffee in small serving",
+    price: "18000",
+    image: "/menu/espresso.jpg",
     category: "signature",
     popular: true,
     isDraft: false,
   },
   {
-    id: 2,
-    name: "Caramel Macchiato",
-    description: "Sweet caramel with espresso",
-    price: 12000,
-    image: "/placeholder.svg?height=200&width=200",
+    id: "2",
+    name: "Cappuccino",
+    description: "Espresso with steamed milk foam",
+    price: "25000",
+    image: "/menu/cappuccino.jpg",
     category: "signature",
-    popular: false,
+    popular: true,
     isDraft: false,
   },
   {
-    id: 4,
-    name: "Velly",
-    description: "Red velvet khas nefo",
-    price: 15000,
-    image: "/placeholder.svg?height=200&width=200",
+    id: "3",
+    name: "Green Tea Latte",
+    description: "Japanese matcha with steamed milk",
+    price: "23000",
+    image: "/menu/green-tea.jpg",
     category: "nonCoffee",
-    popular: true,
-    isDraft: true,
+    popular: false,
+    isDraft: false,
   },
   {
-    id: 7,
+    id: "4",
     name: "Croissant",
-    description: "Buttery and flaky pastry",
-    price: 8000,
-    image: "/placeholder.svg?height=200&width=200",
+    description: "Buttery, flaky pastry",
+    price: "15000",
+    image: "/menu/croissant.jpg",
     category: "snacks",
-    popular: false,
+    popular: true,
     isDraft: false,
   },
 ]
 
 export default function AdminMenu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems)
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [activeCategory, setActiveCategory] = useState<"signature" | "nonCoffee" | "snacks">("signature")
-  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published">("all")
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
+  const [filter, setFilter] = useState<"all" | "published" | "draft">("all")
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    image: "",
-    imageFile: null as File | null,
-    category: "signature" as MenuItem["category"],
-    popular: false,
-    isDraft: false,
-  })
+  const filteredItems = menuItems
+    .filter((item) => item.category === activeCategory)
+    .filter((item) => {
+      switch (filter) {
+        case "published":
+          return !item.isDraft
+        case "draft":
+          return item.isDraft
+        default:
+          return true
+      }
+    })
 
-  const handleImageUpload = (file: File) => {
-    if (file && file.size <= 10 * 1024 * 1024) {
-      // 10MB limit
-      const imageUrl = URL.createObjectURL(file)
-      setFormData({ ...formData, imageFile: file, image: imageUrl })
-      return imageUrl
-    } else {
-      alert("File size must be less than 10MB")
-      return null
+  const handleAddItem = (newItem: Omit<MenuItem, "id">) => {
+    const id = (menuItems.length + 1).toString()
+    setMenuItems([...menuItems, { ...newItem, id }])
+    setAddDialogOpen(false)
+  }
+
+  const handleEditItem = (id: string, updatedItem: Omit<MenuItem, "id">) => {
+    setMenuItems(menuItems.map((item) => (item.id === id ? { ...updatedItem, id } : item)))
+    setEditDialogOpen(false)
+    setSelectedItem(null)
+  }
+
+  const handleDeleteItem = (id: string) => {
+    if (confirm("Are you sure you want to delete this item?")) {
+      setMenuItems(menuItems.filter((item) => item.id !== id))
     }
   }
 
-  const handleAddItem = () => {
-    const newItem: MenuItem = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description,
-      price: Number.parseInt(formData.price),
-      image: formData.image || "/placeholder.svg?height=200&width=200",
-      category: formData.category,
-      popular: formData.popular,
-      isDraft: formData.isDraft,
-    }
-    setMenuItems([...menuItems, newItem])
-    setShowAddDialog(false)
-    resetForm()
+  const categoryLabels = {
+    signature: "Signature Coffee",
+    nonCoffee: "Non Coffee",
+    snacks: "Snacks",
   }
-
-  const handleEditItem = () => {
-    if (!editingItem) return
-    const updatedItems = menuItems.map((item) =>
-      item.id === editingItem.id
-        ? {
-            ...item,
-            name: formData.name,
-            description: formData.description,
-            price: Number.parseInt(formData.price),
-            image: formData.image || item.image,
-            category: formData.category,
-            popular: formData.popular,
-            isDraft: formData.isDraft,
-          }
-        : item,
-    )
-    setMenuItems(updatedItems)
-    setShowEditDialog(false)
-    setEditingItem(null)
-    resetForm()
-  }
-
-  const handleDeleteItem = (id: number) => {
-    setMenuItems(menuItems.filter((item) => item.id !== id))
-  }
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      image: "",
-      imageFile: null,
-      category: "signature",
-      popular: false,
-      isDraft: false,
-    })
-  }
-
-  const openEditDialog = (item: MenuItem) => {
-    setEditingItem(item)
-    setFormData({
-      name: item.name,
-      description: item.description,
-      price: item.price.toString(),
-      image: item.image,
-      imageFile: null,
-      category: item.category,
-      popular: item.popular,
-      isDraft: item.isDraft,
-    })
-    setShowEditDialog(true)
-  }
-
-  const filteredItems = menuItems.filter((item) => {
-    const categoryMatch = item.category === activeCategory
-    if (filterStatus === "all") return categoryMatch
-    if (filterStatus === "draft") return categoryMatch && item.isDraft
-    if (filterStatus === "published") return categoryMatch && !item.isDraft
-    return categoryMatch
-  })
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-4 md:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center space-x-3">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#2563eb]">Menu Management</h1>
-          <Image src="/cat-thumbs-up.png" alt="Menu Cat" width={40} height={40} className="w-10 h-10" />
-        </div>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex items-center space-x-2">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as "all" | "draft" | "published")}
-              className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Items</option>
-              <option value="draft">Drafts</option>
-              <option value="published">Published</option>
-            </select>
+      <div className="flex items-center space-x-3 mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-[#2563eb]">Menu Management</h1>
+        <Image src="/cat-thumbs-up.png" alt="Menu Cat" width={40} height={40} className="w-10 h-10" />
+      </div>
+
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="min-w-[150px] justify-between">
+                  {filter === "all" ? "All Items" : filter === "published" ? "Published" : "Drafts"}
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilter("all")}>All Items</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("published")}>Published</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("draft")}>Drafts</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="min-w-[150px] justify-between">
+                  {categoryLabels[activeCategory]}
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setActiveCategory("signature")}>
+                  Signature Coffee
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveCategory("nonCoffee")}>
+                  Non Coffee
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveCategory("snacks")}>
+                  Snacks
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <Button onClick={() => setShowAddDialog(true)} className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
+
+          <Button
+            onClick={() => setAddDialogOpen(true)}
+            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add New Item
           </Button>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredItems.map((item) => (
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              onEdit={() => {
+                setSelectedItem(item)
+                setEditDialogOpen(true)
+              }}
+              onDelete={() => handleDeleteItem(item.id)}
+            />
+          ))}
+        </div>
+
+        <AddItemDialog
+          open={addDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          onAddItem={handleAddItem}
+        />
+
+        <EditItemDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          item={selectedItem}
+          onEditItem={handleEditItem}
+        />
       </div>
-
-      {/* Category Tabs */}
-      <div className="flex space-x-4 mb-8 overflow-x-auto">
-        <button
-          onClick={() => setActiveCategory("signature")}
-          className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-            activeCategory === "signature"
-              ? "bg-[#2563eb] text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-          }`}
-        >
-          Signature Coffee
-        </button>
-        <button
-          onClick={() => setActiveCategory("nonCoffee")}
-          className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-            activeCategory === "nonCoffee"
-              ? "bg-[#2563eb] text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-          }`}
-        >
-          Non Coffee
-        </button>
-        <button
-          onClick={() => setActiveCategory("snacks")}
-          className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-            activeCategory === "snacks"
-              ? "bg-[#2563eb] text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-          }`}
-        >
-          Snacks
-        </button>
-      </div>
-
-      {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((item) => (
-          <Card key={item.id} className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-0">
-              <div className="relative">
-                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 p-6 flex items-center justify-center">
-                  <Image
-                    src={item.image || "/placeholder.svg?height=150&width=150"}
-                    alt={item.name}
-                    width={150}
-                    height={150}
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                </div>
-                <div className="absolute top-3 left-3 flex gap-2">
-                  {item.popular && (
-                    <Badge className="bg-orange-500 text-white hover:bg-orange-500">Popular</Badge>
-                  )}
-                  {item.isDraft && (
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                      Draft
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h3>
-                <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-2xl font-bold text-[#2563eb]">Rp {item.price.toLocaleString("id-ID")}</div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => openEditDialog(item)}
-                    className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleDeleteItem(item.id)}
-                    variant="outline"
-                    className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Add Item Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Add New Menu Item</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Product Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter product name"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter product description"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="price">Price (Rp)</Label>
-              <Input
-                id="price"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="Enter price"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="imageFile">Upload Image (Max 10MB)</Label>
-              <Input
-                id="imageFile"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    handleImageUpload(file)
-                  }
-                }}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="image">Or Image URL</Label>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="Enter image URL"
-              />
-            </div>
-
-            {formData.image && (
-              <div className="text-center">
-                <Image
-                  src={formData.image || "/placeholder.svg"}
-                  alt="Preview"
-                  width={100}
-                  height={100}
-                  className="w-24 h-24 object-cover rounded-lg mx-auto"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <select
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              >
-                <option value="signature">Signature Coffee</option>
-                <option value="nonCoffee">Non Coffee</option>
-                <option value="snacks">Snacks</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="popular"
-                checked={formData.popular}
-                onChange={(e) => setFormData({ ...formData, popular: e.target.checked })}
-              />
-              <Label htmlFor="popular">Mark as Popular</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isDraft"
-                checked={formData.isDraft}
-                onChange={(e) => setFormData({ ...formData, isDraft: e.target.checked })}
-              />
-              <Label htmlFor="isDraft">Save as Draft</Label>
-            </div>
-
-            <div className="flex space-x-3">
-              <Button
-                onClick={() => {
-                  setShowAddDialog(false)
-                  resetForm()
-                }}
-                variant="outline"
-                className="flex-1 text-gray-600 border-gray-300"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddItem}
-                disabled={!formData.name || !formData.price}
-                className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
-              >
-                Add Item
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Item Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Edit Menu Item</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="editName">Product Name</Label>
-              <Input
-                id="editName"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter product name"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="editDescription">Description</Label>
-              <Textarea
-                id="editDescription"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter product description"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="editPrice">Price (Rp)</Label>
-              <Input
-                id="editPrice"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="Enter price"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="editImageFile">Upload New Image (Max 10MB)</Label>
-              <Input
-                id="editImageFile"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    handleImageUpload(file)
-                  }
-                }}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="editImage">Or Image URL</Label>
-              <Input
-                id="editImage"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="Enter image URL"
-              />
-            </div>
-
-            {formData.image && (
-              <div className="text-center">
-                <Image
-                  src={formData.image || "/placeholder.svg"}
-                  alt="Preview"
-                  width={100}
-                  height={100}
-                  className="w-24 h-24 object-cover rounded-lg mx-auto"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="editCategory">Category</Label>
-              <select
-                id="editCategory"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              >
-                <option value="signature">Signature Coffee</option>
-                <option value="nonCoffee">Non Coffee</option>
-                <option value="snacks">Snacks</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="editPopular"
-                checked={formData.popular}
-                onChange={(e) => setFormData({ ...formData, popular: e.target.checked })}
-              />
-              <Label htmlFor="editPopular">Mark as Popular</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="editIsDraft"
-                checked={formData.isDraft}
-                onChange={(e) => setFormData({ ...formData, isDraft: e.target.checked })}
-              />
-              <Label htmlFor="editIsDraft">Save as Draft</Label>
-            </div>
-
-            <div className="flex space-x-3">
-              <Button
-                onClick={() => {
-                  setShowEditDialog(false)
-                  setEditingItem(null)
-                  resetForm()
-                }}
-                variant="outline"
-                className="flex-1 text-gray-600 border-gray-300"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleEditItem}
-                disabled={!formData.name || !formData.price}
-                className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
-              >
-                Save Changes
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

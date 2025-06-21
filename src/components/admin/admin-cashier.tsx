@@ -4,12 +4,20 @@ import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Minus, ShoppingCart, User, Calculator, CheckCircle, RotateCcw, Gift } from "lucide-react"
+import { User } from "lucide-react"
+import UserSelectDialog from "./cashier/user-select-dialog"
+import CartSection from "./cashier/cart-section"
+import MenuSection from "./cashier/menu-section"
+import CheckoutDialog from "./cashier/checkout-dialog"
 
-const menuItems = [
+interface MenuItem {
+  id: number
+  name: string
+  price: number
+  category: "signature" | "nonCoffee" | "snacks"
+}
+
+const menuItems: MenuItem[] = [
   { id: 1, name: "Nefo Original", price: 8000, category: "signature" },
   { id: 2, name: "Caramel Macchiato", price: 12000, category: "signature" },
   { id: 3, name: "Nefo Special", price: 15000, category: "signature" },
@@ -117,20 +125,6 @@ export default function AdminCashier() {
     return item ? item.quantity : 0
   }
 
-  const getTotalPrice = () => {
-    const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0)
-    if (selectedVoucher) {
-      if (selectedVoucher.discount === "FREE") {
-        // Free upgrade - no discount on total
-        return subtotal
-      } else if (selectedVoucher.discount.includes("%")) {
-        const discountPercent = Number.parseInt(selectedVoucher.discount.replace("%", ""))
-        return subtotal - (subtotal * discountPercent) / 100
-      }
-    }
-    return subtotal
-  }
-
   const getSubtotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0)
   }
@@ -143,13 +137,21 @@ export default function AdminCashier() {
     return 0
   }
 
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0)
+  const getTotalPrice = () => {
+    const subtotal = getSubtotal()
+    if (selectedVoucher) {
+      if (selectedVoucher.discount === "FREE") {
+        return subtotal
+      } else if (selectedVoucher.discount.includes("%")) {
+        return subtotal - getDiscount()
+      }
+    }
+    return subtotal
   }
 
   const handleUserChange = (user: any) => {
     setSelectedUser(user)
-    setSelectedVoucher(null) // Reset voucher when changing user
+    setSelectedVoucher(null)
     setShowUserSelect(false)
   }
 
@@ -200,8 +202,6 @@ export default function AdminCashier() {
     setSelectedUser(registeredUsers[3]) // Reset to walk-in customer
   }
 
-  const filteredItems = menuItems.filter((item) => item.category === activeCategory)
-
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-4 md:p-8">
       {/* Header */}
@@ -220,7 +220,6 @@ export default function AdminCashier() {
                 <div className="flex items-center space-x-3">
                   <User className="w-5 h-5 text-[#2563eb]" />
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Customer</Label>
                     <p className="font-bold text-gray-900">{selectedUser.name}</p>
                     {selectedUser.email !== "N/A" && (
                       <p className="text-sm text-gray-600">{selectedUser.points} points</p>
@@ -238,308 +237,54 @@ export default function AdminCashier() {
             </CardContent>
           </Card>
 
-          {/* Category Tabs */}
-          <div className="flex space-x-4 overflow-x-auto">
-            <button
-              onClick={() => setActiveCategory("signature")}
-              className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                activeCategory === "signature"
-                  ? "bg-[#2563eb] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              Signature Coffee
-            </button>
-            <button
-              onClick={() => setActiveCategory("nonCoffee")}
-              className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                activeCategory === "nonCoffee"
-                  ? "bg-[#2563eb] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              Non Coffee
-            </button>
-            <button
-              onClick={() => setActiveCategory("snacks")}
-              className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                activeCategory === "snacks"
-                  ? "bg-[#2563eb] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              Snacks
-            </button>
-          </div>
-
           {/* Menu Items */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="font-bold text-gray-900">{item.name}</h3>
-                      <p className="text-lg font-bold text-[#2563eb]">Rp {item.price.toLocaleString("id-ID")}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {getCartItemQuantity(item.id) > 0 ? (
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => removeFromCart(item.id)}
-                            className="w-8 h-8 p-0"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="font-bold text-[#2563eb] min-w-[20px] text-center">
-                            {getCartItemQuantity(item.id)}
-                          </span>
-                          <Button
-                            size="sm"
-                            onClick={() => addToCart(item)}
-                            className="w-8 h-8 p-0 bg-[#2563eb] hover:bg-[#1d4ed8]"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => addToCart(item)}
-                          className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
-                        >
-                          Add
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <MenuSection
+            items={menuItems}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+            cartQuantities={Object.fromEntries(cart.map((item) => [item.id, item.quantity]))}
+            onAddToCart={addToCart}
+            onRemoveFromCart={removeFromCart}
+          />
         </div>
 
         {/* Cart Section */}
-        <div className="space-y-6">
-          <Card className="bg-white border-0 shadow-lg sticky top-4">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <ShoppingCart className="w-5 h-5 text-[#2563eb]" />
-                <h3 className="text-lg font-bold text-gray-900">Current Order</h3>
-              </div>
-
-              {/* Voucher Selection */}
-              {selectedUser.email !== "N/A" && selectedUser.vouchers.length > 0 && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Gift className="w-4 h-4 text-green-600" />
-                    <Label className="text-sm font-medium text-green-800">Using Voucher</Label>
-                  </div>
-                  <select
-                    value={selectedVoucher?.id || ""}
-                    onChange={(e) => handleVoucherChange(e.target.value)}
-                    className="w-full p-2 border border-green-300 rounded-md text-sm bg-white"
-                  >
-                    <option value="">No voucher</option>
-                    {selectedUser.vouchers.map((voucher: Voucher) => (
-                      <option key={voucher.id} value={voucher.id}>
-                        {voucher.title} - {voucher.discount}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedVoucher && <p className="text-xs text-green-700 mt-1">{selectedVoucher.description}</p>}
-                </div>
-              )}
-
-              {cart.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500">No items in cart</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-900">{item.name}</h4>
-                        <p className="text-sm text-gray-600">
-                          Rp {item.price.toLocaleString("id-ID")} x {item.quantity}
-                        </p>
-                      </div>
-                      <div className="font-bold text-[#2563eb]">
-                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="border-t pt-4 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Subtotal:</span>
-                      <span>Rp {getSubtotal().toLocaleString("id-ID")}</span>
-                    </div>
-
-                    {selectedVoucher && getDiscount() > 0 && (
-                      <div className="flex items-center justify-between text-sm text-green-600">
-                        <span>Discount ({selectedVoucher.discount}):</span>
-                        <span>-Rp {getDiscount().toLocaleString("id-ID")}</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between text-xl font-bold mb-4 pt-2 border-t">
-                      <span>Total:</span>
-                      <span className="text-[#2563eb]">Rp {getTotalPrice().toLocaleString("id-ID")}</span>
-                    </div>
-
-                    {getTotalPrice() >= 50000 && selectedUser.email !== "N/A" && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                        <p className="text-sm text-green-700 font-medium">🎉 Customer will earn 10 points!</p>
-                      </div>
-                    )}
-
-                    <Button
-                      onClick={() => setShowCheckoutDialog(true)}
-                      className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white mb-2"
-                    >
-                      <Calculator className="w-4 h-4 mr-2" />
-                      Checkout ({getTotalItems()} items)
-                    </Button>
-
-                    <Button
-                      onClick={() => {
-                        setCart([])
-                        setSelectedVoucher(null)
-                      }}
-                      variant="outline"
-                      className="w-full text-gray-600 border-gray-300"
-                      disabled={cart.length === 0}
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reset Order
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <CartSection
+          cart={cart}
+          selectedVoucher={selectedVoucher}
+          userEmail={selectedUser.email}
+          userVouchers={selectedUser.vouchers}
+          onVoucherChange={handleVoucherChange}
+          onCheckout={() => setShowCheckoutDialog(true)}
+          onResetCart={() => {
+            setCart([])
+            setSelectedVoucher(null)
+          }}
+        />
       </div>
 
       {/* User Selection Dialog */}
-      <Dialog open={showUserSelect} onOpenChange={setShowUserSelect}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Select Customer</DialogTitle>
-          </DialogHeader>
+      <UserSelectDialog
+        open={showUserSelect}
+        onOpenChange={setShowUserSelect}
+        users={registeredUsers}
+        selectedUser={selectedUser}
+        onUserChange={handleUserChange}
+      />
 
-          <div className="space-y-4">
-            {registeredUsers.map((user) => (
-              <Card
-                key={user.id}
-                className={`cursor-pointer border-2 transition-all ${
-                  selectedUser.id === user.id ? "border-[#2563eb] bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                }`}
-                onClick={() => handleUserChange(user)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-                        <Image src="/cat-thumbs-up.png" alt="User" width={20} height={20} className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900">{user.name}</h4>
-                        <p className="text-sm text-gray-600">{user.email}</p>
-                        {user.vouchers.length > 0 && (
-                          <p className="text-xs text-green-600">{user.vouchers.length} voucher(s) available</p>
-                        )}
-                      </div>
-                    </div>
-                    {user.email !== "N/A" && <Badge className="bg-[#2563eb] text-white">{user.points} pts</Badge>}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Checkout Confirmation Dialog */}
-      <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Confirm Order</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Order Summary</h3>
-              <p className="text-gray-600">Customer: {selectedUser.name}</p>
-            </div>
-
-            <div className="space-y-2">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">
-                    {item.name} x{item.quantity}
-                  </span>
-                  <span className="font-medium">Rp {(item.price * item.quantity).toLocaleString("id-ID")}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t pt-4 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Subtotal:</span>
-                <span>Rp {getSubtotal().toLocaleString("id-ID")}</span>
-              </div>
-
-              {selectedVoucher && getDiscount() > 0 && (
-                <div className="flex items-center justify-between text-sm text-green-600">
-                  <span>Discount ({selectedVoucher.discount}):</span>
-                  <span>-Rp {getDiscount().toLocaleString("id-ID")}</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between text-xl font-bold pt-2 border-t">
-                <span>Total:</span>
-                <span className="text-[#2563eb]">Rp {getTotalPrice().toLocaleString("id-ID")}</span>
-              </div>
-
-              {getTotalPrice() >= 50000 && selectedUser.email !== "N/A" && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-sm text-green-700 font-medium text-center">Customer will earn 10 points!</p>
-                </div>
-              )}
-
-              {selectedVoucher && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-700 font-medium text-center">
-                    Voucher "{selectedVoucher.title}" will be used
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex space-x-3">
-              <Button
-                onClick={() => setShowCheckoutDialog(false)}
-                variant="outline"
-                className="flex-1 text-gray-600 border-gray-300"
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleCheckout} className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
-                Complete Order
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Checkout Dialog */}
+      <CheckoutDialog
+        open={showCheckoutDialog}
+        onOpenChange={setShowCheckoutDialog}
+        cart={cart}
+        selectedVoucher={selectedVoucher}
+        customerName={selectedUser.name}
+        userEmail={selectedUser.email}
+        subtotal={getSubtotal()}
+        discount={getDiscount()}
+        total={getTotalPrice()}
+        onConfirm={handleCheckout}
+      />
     </div>
   )
 }
