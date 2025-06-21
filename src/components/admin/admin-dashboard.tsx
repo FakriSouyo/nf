@@ -92,7 +92,16 @@ export default function AdminDashboard() {
   }
 
   const updateUserPoints = (userId: number, newPoints: number) => {
+    const user = users.find(u => u.id === userId)
     setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, points: newPoints } : user)))
+    
+    if (user) {
+      toast({
+        variant: "success",
+        title: "Points Updated",
+        description: `${user.name}'s points have been updated to ${newPoints}.`,
+      })
+    }
   }
 
   const handleSendNotification = (notification: { title: string; message: string; category: string }) => {
@@ -138,7 +147,16 @@ export default function AdminDashboard() {
   }
 
   const handleToggleVoucherStatus = (id: number) => {
+    const voucher = vouchers.find(v => v.id === id)
     setVouchers((prev) => prev.map((v) => (v.id === id ? { ...v, active: !v.active } : v)))
+    
+    if (voucher) {
+      toast({
+        variant: voucher.active ? "default" : "success",
+        title: voucher.active ? "Voucher Deactivated" : "Voucher Activated",
+        description: `${voucher.title} has been ${voucher.active ? 'deactivated' : 'activated'}.`,
+      })
+    }
   }
 
   const handleAddReward = (reward: Omit<typeof demoRewards[0], "id">) => {

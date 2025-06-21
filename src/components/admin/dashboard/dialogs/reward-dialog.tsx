@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Star, Plus, Edit, Trash2 } from "lucide-react"
+import { Star, Plus, Edit, Trash2, Gift } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import DeleteConfirmationDialog from "@/components/ui/delete-confirmation-dialog"
 
 interface Reward {
   id: string
@@ -35,23 +37,25 @@ export default function RewardDialog({
   onEditReward,
   onDeleteReward,
 }: RewardDialogProps) {
+  const { toast } = useToast()
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [editingReward, setEditingReward] = useState<Reward | null>(null)
-  const [rewardForm, setRewardForm] = useState({
+  const [rewardForm, setRewardForm] = useState<Omit<Reward, "id">>({
     name: "",
     description: "",
-    pointsCost: "",
+    pointsCost: 0,
     image: "",
-    imageFile: null as File | null,
     available: true,
   })
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [rewardToDelete, setRewardToDelete] = useState<Reward | null>(null)
 
   const handleImageUpload = (file: File) => {
     if (file && file.size <= 10 * 1024 * 1024) {
       // 10MB limit
       const imageUrl = URL.createObjectURL(file)
-      setRewardForm({ ...rewardForm, imageFile: file, image: imageUrl })
+      setRewardForm({ ...rewardForm, image: imageUrl })
       return imageUrl
     } else {
       alert("File size must be less than 10MB")
@@ -60,53 +64,65 @@ export default function RewardDialog({
   }
 
   const handleAddReward = () => {
-    onAddReward({
-      name: rewardForm.name,
-      description: rewardForm.description,
-      pointsCost: Number.parseInt(rewardForm.pointsCost),
-      image: rewardForm.image || "/placeholder.svg?height=150&width=150",
-      available: rewardForm.available,
-    })
+    onAddReward(rewardForm)
     setShowAddDialog(false)
     resetForm()
+    
+    toast({
+      variant: "success",
+      title: "Reward Added Successfully!",
+      description: `${rewardForm.name} reward has been created.`,
+    })
   }
 
-  const handleEditReward = () => {
-    if (editingReward) {
-      onEditReward({
-        ...editingReward,
-        name: rewardForm.name,
-        description: rewardForm.description,
-        pointsCost: Number.parseInt(rewardForm.pointsCost),
-        image: rewardForm.image || editingReward.image,
-        available: rewardForm.available,
-      })
-      setShowEditDialog(false)
-      setEditingReward(null)
-      resetForm()
-    }
-  }
-
-  const openEditDialog = (reward: Reward) => {
+  const handleEditReward = (reward: Reward) => {
     setEditingReward(reward)
     setRewardForm({
       name: reward.name,
       description: reward.description,
-      pointsCost: reward.pointsCost.toString(),
+      pointsCost: reward.pointsCost,
       image: reward.image,
-      imageFile: null,
       available: reward.available,
     })
     setShowEditDialog(true)
+  }
+
+  const handleDeleteReward = (reward: Reward) => {
+    setRewardToDelete(reward)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteReward = () => {
+    if (rewardToDelete) {
+      onDeleteReward(rewardToDelete.id)
+      
+      toast({
+        variant: "destructive",
+        title: "Reward Deleted",
+        description: `${rewardToDelete.name} reward has been deleted.`,
+      })
+      
+      setRewardToDelete(null)
+    }
+  }
+
+  const handleCancelAdd = () => {
+    setShowAddDialog(false)
+    resetForm()
+  }
+
+  const handleCancelEdit = () => {
+    setShowEditDialog(false)
+    setEditingReward(null)
+    resetForm()
   }
 
   const resetForm = () => {
     setRewardForm({
       name: "",
       description: "",
-      pointsCost: "",
+      pointsCost: 0,
       image: "",
-      imageFile: null,
       available: true,
     })
   }
@@ -154,7 +170,7 @@ export default function RewardDialog({
                   <div className="flex space-x-2">
                     <Button
                       size="sm"
-                      onClick={() => openEditDialog(reward)}
+                      onClick={() => handleEditReward(reward)}
                       className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
                     >
                       <Edit className="w-4 h-4 mr-1" />
@@ -162,7 +178,7 @@ export default function RewardDialog({
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => onDeleteReward(reward.id)}
+                      onClick={() => handleDeleteReward(reward)}
                       variant="outline"
                       className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
                     >
@@ -211,7 +227,7 @@ export default function RewardDialog({
                 id="rewardPoints"
                 type="number"
                 value={rewardForm.pointsCost}
-                onChange={(e) => setRewardForm({ ...rewardForm, pointsCost: e.target.value })}
+                onChange={(e) => setRewardForm({ ...rewardForm, pointsCost: Number.parseInt(e.target.value) })}
                 placeholder="Enter required points"
               />
             </div>
@@ -266,10 +282,7 @@ export default function RewardDialog({
 
             <div className="flex space-x-3">
               <Button
-                onClick={() => {
-                  setShowAddDialog(false)
-                  resetForm()
-                }}
+                onClick={handleCancelAdd}
                 variant="outline"
                 className="flex-1 text-gray-600 border-gray-300"
               >
@@ -321,7 +334,7 @@ export default function RewardDialog({
                 id="editRewardPoints"
                 type="number"
                 value={rewardForm.pointsCost}
-                onChange={(e) => setRewardForm({ ...rewardForm, pointsCost: e.target.value })}
+                onChange={(e) => setRewardForm({ ...rewardForm, pointsCost: Number.parseInt(e.target.value) })}
                 placeholder="Enter required points"
               />
             </div>
@@ -376,18 +389,27 @@ export default function RewardDialog({
 
             <div className="flex space-x-3">
               <Button
-                onClick={() => {
-                  setShowEditDialog(false)
-                  setEditingReward(null)
-                  resetForm()
-                }}
+                onClick={handleCancelEdit}
                 variant="outline"
                 className="flex-1 text-gray-600 border-gray-300"
               >
                 Cancel
               </Button>
               <Button
-                onClick={handleEditReward}
+                onClick={() => {
+                  if (editingReward) {
+                    onEditReward({ ...editingReward, ...rewardForm })
+                    setShowEditDialog(false)
+                    setEditingReward(null)
+                    resetForm()
+                    
+                    toast({
+                      variant: "success",
+                      title: "Reward Updated Successfully!",
+                      description: `${rewardForm.name} reward has been updated.`,
+                    })
+                  }
+                }}
                 disabled={!rewardForm.name || !rewardForm.pointsCost}
                 className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
               >
@@ -397,6 +419,16 @@ export default function RewardDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Reward"
+        description="Are you sure you want to delete this reward?"
+        onConfirm={confirmDeleteReward}
+        itemName={rewardToDelete?.name}
+      />
     </Dialog>
   )
 } 

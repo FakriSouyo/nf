@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
+import { useToast } from "@/hooks/use-toast"
 
 interface MenuItem {
   id: string
@@ -25,6 +26,7 @@ interface EditItemDialogProps {
 }
 
 export default function EditItemDialog({ open, onOpenChange, item, onEditItem }: EditItemDialogProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState<Omit<MenuItem, "id">>({
     name: "",
     description: "",
@@ -65,7 +67,17 @@ export default function EditItemDialog({ open, onOpenChange, item, onEditItem }:
     if (item) {
       onEditItem(item.id, formData)
       onOpenChange(false)
+      
+      toast({
+        variant: "success",
+        title: "Menu Item Updated Successfully!",
+        description: `${formData.name} has been updated in the menu.`,
+      })
     }
+  }
+
+  const handleCancel = () => {
+    onOpenChange(false)
   }
 
   if (!item) return null
@@ -183,7 +195,7 @@ export default function EditItemDialog({ open, onOpenChange, item, onEditItem }:
 
           <div className="flex space-x-3">
             <Button
-              onClick={() => onOpenChange(false)}
+              onClick={handleCancel}
               variant="outline"
               className="flex-1 text-gray-600 border-gray-300"
             >

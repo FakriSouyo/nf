@@ -4,7 +4,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { Gift, Plus, Edit, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import DeleteConfirmationDialog from "@/components/ui/delete-confirmation-dialog"
 
 interface Voucher {
   id: number
@@ -32,19 +35,28 @@ export default function VoucherDialog({
   onDeleteVoucher,
   onToggleStatus,
 }: VoucherDialogProps) {
+  const { toast } = useToast()
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null)
-  const [formVoucher, setFormVoucher] = useState({
+  const [formVoucher, setFormVoucher] = useState<Omit<Voucher, "id">>({
     title: "",
     discount: "",
     active: true,
   })
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [voucherToDelete, setVoucherToDelete] = useState<Voucher | null>(null)
 
   const handleAddVoucher = () => {
     onAddVoucher(formVoucher)
     setShowAddDialog(false)
     resetForm()
+    
+    toast({
+      variant: "success",
+      title: "Voucher Added Successfully!",
+      description: `${formVoucher.title} voucher has been created.`,
+    })
   }
 
   const handleEditVoucher = () => {
@@ -53,7 +65,43 @@ export default function VoucherDialog({
       setShowEditDialog(false)
       setEditingVoucher(null)
       resetForm()
+      
+      toast({
+        variant: "success",
+        title: "Voucher Updated Successfully!",
+        description: `${formVoucher.title} voucher has been updated.`,
+      })
     }
+  }
+
+  const handleDeleteVoucher = (voucher: Voucher) => {
+    setVoucherToDelete(voucher)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteVoucher = () => {
+    if (voucherToDelete) {
+      onDeleteVoucher(voucherToDelete.id)
+      
+      toast({
+        variant: "destructive",
+        title: "Voucher Deleted",
+        description: `${voucherToDelete.title} voucher has been deleted.`,
+      })
+      
+      setVoucherToDelete(null)
+    }
+  }
+
+  const handleCancelAdd = () => {
+    setShowAddDialog(false)
+    resetForm()
+  }
+
+  const handleCancelEdit = () => {
+    setShowEditDialog(false)
+    setEditingVoucher(null)
+    resetForm()
   }
 
   const openEditDialog = (voucher: Voucher) => {
@@ -123,7 +171,7 @@ export default function VoucherDialog({
                       size="sm"
                       variant="outline"
                       className="text-red-600 border-red-300"
-                      onClick={() => onDeleteVoucher(voucher.id)}
+                      onClick={() => handleDeleteVoucher(voucher)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -175,10 +223,7 @@ export default function VoucherDialog({
 
             <div className="flex space-x-3">
               <Button
-                onClick={() => {
-                  setShowAddDialog(false)
-                  resetForm()
-                }}
+                onClick={handleCancelAdd}
                 variant="outline"
                 className="flex-1 text-gray-600 border-gray-300"
               >
@@ -236,11 +281,7 @@ export default function VoucherDialog({
 
             <div className="flex space-x-3">
               <Button
-                onClick={() => {
-                  setShowEditDialog(false)
-                  setEditingVoucher(null)
-                  resetForm()
-                }}
+                onClick={handleCancelEdit}
                 variant="outline"
                 className="flex-1 text-gray-600 border-gray-300"
               >
@@ -257,6 +298,16 @@ export default function VoucherDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Voucher"
+        description="Are you sure you want to delete this voucher?"
+        onConfirm={confirmDeleteVoucher}
+        itemName={voucherToDelete?.title}
+      />
     </Dialog>
   )
 } 

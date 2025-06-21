@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Edit2, Mail, LogOut, User, Shield, Bell, Coffee, Star, Camera, Link } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface AdminProfileProps {
   onLogout: () => void
 }
 
 export default function AdminProfile({ onLogout }: AdminProfileProps) {
+  const { toast } = useToast()
   const [admin, setAdmin] = useState({
     name: "Admin User",
     email: "admin@nefocoffee.com",
@@ -33,6 +35,12 @@ export default function AdminProfile({ onLogout }: AdminProfileProps) {
   const handleSaveName = () => {
     setAdmin((prev) => ({ ...prev, name: newName }))
     setIsEditingName(false)
+    
+    toast({
+      variant: "success",
+      title: "Profile Updated",
+      description: "Your name has been updated successfully.",
+    })
   }
 
   const handleSavePhoto = () => {
@@ -45,14 +53,24 @@ export default function AdminProfile({ onLogout }: AdminProfileProps) {
     setShowEditPhotoDialog(false)
     setNewPhotoUrl("")
     setPhotoFile(null)
+    
+    toast({
+      variant: "success",
+      title: "Photo Updated",
+      description: "Your profile photo has been updated successfully.",
+    })
+  }
+
+  const handleLogout = () => {
+    onLogout()
   }
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-4 md:p-8">
       {/* Header */}
       <div className="flex items-center space-x-3 mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-[#2563eb]">Admin Profile</h1>
-        <Image src="/cat-mascot.png" alt="Admin Cat" width={40} height={40} className="w-10 h-10" />
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2563eb]">Admin Profile</h1>
+        <Image src="/cat-mascot.png" alt="Admin Cat" width={32} height={32} className="w-8 h-8 md:w-10 md:h-10" />
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
@@ -65,9 +83,9 @@ export default function AdminProfile({ onLogout }: AdminProfileProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center overflow-hidden">
                   <Image
                     src={admin.profileImage || "/placeholder.svg"}
                     alt="Admin Profile"
@@ -80,82 +98,86 @@ export default function AdminProfile({ onLogout }: AdminProfileProps) {
                   size="sm"
                   variant="outline"
                   onClick={() => setShowEditPhotoDialog(true)}
-                  className="absolute -bottom-2 -right-2 w-8 h-8 p-0 rounded-full bg-white border-2 border-[#2563eb]"
+                  className="absolute -bottom-2 -right-2 w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-full bg-white border-2 border-[#2563eb]"
                 >
-                  <Camera className="w-4 h-4 text-[#2563eb]" />
+                  <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-[#2563eb]" />
                 </Button>
               </div>
               <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
                   {isEditingName ? (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full">
                       <Input
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         className="max-w-xs"
                         autoFocus
                       />
-                      <Button size="sm" onClick={handleSaveName} className="bg-[#2563eb] hover:bg-[#1d4ed8]">
-                        Save
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setIsEditingName(false)}>
-                        Cancel
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button size="sm" onClick={handleSaveName} className="bg-[#2563eb] hover:bg-[#1d4ed8]">
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setIsEditingName(false)}>
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-3">
-                      <h2 className="text-2xl font-bold text-gray-900">{admin.name}</h2>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{admin.name}</h2>
                       <Button size="sm" variant="outline" onClick={() => setIsEditingName(true)} className="p-2">
                         <Edit2 className="w-4 h-4" />
                       </Button>
                     </div>
                   )}
                 </div>
-                <div className="flex items-center space-x-2 text-gray-600 mb-1">
-                  <Shield className="w-4 h-4" />
-                  <span>{admin.role}</span>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm">{admin.role}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Mail className="w-4 h-4" />
+                    <span className="text-sm">{admin.email}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <span className="w-4 h-4 text-center">📱</span>
+                    <span className="text-sm">{admin.phone}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <span className="w-4 h-4 text-center">📍</span>
+                    <span className="text-sm">{admin.storeLocation}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">Admin since {admin.joinDate}</p>
                 </div>
-                <div className="flex items-center space-x-2 text-gray-600 mb-1">
-                  <Mail className="w-4 h-4" />
-                  <span>{admin.email}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-600 mb-1">
-                  <span className="w-4 h-4 text-center">📱</span>
-                  <span>{admin.phone}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-600 mb-1">
-                  <span className="w-4 h-4 text-center">📍</span>
-                  <span>{admin.storeLocation}</span>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">Admin since {admin.joinDate}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Admin Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0">
-            <CardContent className="p-6 text-center">
-              <Coffee className="w-8 h-8 text-[#2563eb] mx-auto mb-3" />
-              <div className="text-2xl font-bold text-[#2563eb] mb-1">156</div>
-              <div className="text-sm text-gray-600">Orders This Month</div>
+            <CardContent className="p-4 md:p-6 text-center">
+              <Coffee className="w-6 h-6 md:w-8 md:h-8 text-[#2563eb] mx-auto mb-2 md:mb-3" />
+              <div className="text-xl md:text-2xl font-bold text-[#2563eb] mb-1">156</div>
+              <div className="text-xs md:text-sm text-gray-600">Orders This Month</div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-0">
-            <CardContent className="p-6 text-center">
-              <Shield className="w-8 h-8 text-[#2563eb] mx-auto mb-3" />
-              <div className="text-2xl font-bold text-[#2563eb] mb-1">23</div>
-              <div className="text-sm text-gray-600">Active Users</div>
+            <CardContent className="p-4 md:p-6 text-center">
+              <Shield className="w-6 h-6 md:w-8 md:h-8 text-[#2563eb] mx-auto mb-2 md:mb-3" />
+              <div className="text-xl md:text-2xl font-bold text-[#2563eb] mb-1">23</div>
+              <div className="text-xs md:text-sm text-gray-600">Active Users</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0">
-            <CardContent className="p-6 text-center">
-              <Star className="w-8 h-8 text-[#2563eb] mx-auto mb-3" />
-              <div className="text-2xl font-bold text-[#2563eb] mb-1">4.8</div>
-              <div className="text-sm text-gray-600">Store Rating</div>
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0 sm:col-span-2 lg:col-span-1">
+            <CardContent className="p-4 md:p-6 text-center">
+              <Star className="w-6 h-6 md:w-8 md:h-8 text-[#2563eb] mx-auto mb-2 md:mb-3" />
+              <div className="text-xl md:text-2xl font-bold text-[#2563eb] mb-1">4.8</div>
+              <div className="text-xs md:text-sm text-gray-600">Store Rating</div>
             </CardContent>
           </Card>
         </div>
@@ -235,7 +257,7 @@ export default function AdminProfile({ onLogout }: AdminProfileProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button
-              onClick={onLogout}
+              onClick={handleLogout}
               variant="outline"
               className="w-full justify-start text-gray-700 border-gray-300 hover:bg-gray-50"
             >

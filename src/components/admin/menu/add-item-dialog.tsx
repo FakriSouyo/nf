@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
+import { useToast } from "@/hooks/use-toast"
 
 interface AddItemDialogProps {
   open: boolean
@@ -21,6 +22,7 @@ interface AddItemDialogProps {
 }
 
 export default function AddItemDialog({ open, onOpenChange, onAddItem }: AddItemDialogProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -59,6 +61,17 @@ export default function AddItemDialog({ open, onOpenChange, onAddItem }: AddItem
 
   const handleSubmit = () => {
     onAddItem(formData)
+    resetForm()
+    
+    toast({
+      variant: "success",
+      title: "Menu Item Added Successfully!",
+      description: `${formData.name} has been added to the menu.`,
+    })
+  }
+
+  const handleCancel = () => {
+    onOpenChange(false)
     resetForm()
   }
 
@@ -175,10 +188,7 @@ export default function AddItemDialog({ open, onOpenChange, onAddItem }: AddItem
 
           <div className="flex space-x-3">
             <Button
-              onClick={() => {
-                onOpenChange(false)
-                resetForm()
-              }}
+              onClick={handleCancel}
               variant="outline"
               className="flex-1 text-gray-600 border-gray-300"
             >
