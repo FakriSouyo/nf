@@ -1,16 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, ChevronDown, Filter, ListFilter, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import DeleteConfirmationDialog from "@/components/ui/delete-confirmation-dialog"
 import OrderCard from "./orders/order-card"
@@ -34,6 +24,11 @@ interface Order {
   customerName?: string
   customerEmail?: string
   customerPhone?: string
+}
+
+interface AdminOrdersProps {
+  searchTerm?: string
+  statusFilter?: "all" | "pending" | "process" | "completed" | "cancelled"
 }
 
 // Demo data for orders
@@ -229,15 +224,16 @@ const demoOrders: Order[] = [
   },
 ]
 
-export default function AdminOrders() {
+export default function AdminOrders({
+  searchTerm = "",
+  statusFilter = "all"
+}: AdminOrdersProps) {
   const { toast } = useToast()
   const [orders, setOrders] = useState<Order[]>(demoOrders)
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(demoOrders)
-  const [searchTerm, setSearchTerm] = useState("")
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "process" | "completed" | "cancelled">("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
   const ordersPerPage = 5
@@ -364,87 +360,8 @@ export default function AdminOrders() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0]">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#f5f5f0] border-b border-gray-200 shadow-sm">
-        <div className="p-4 md:p-8 pb-4">
-          {/* Header */}
-          <div className="flex items-center space-x-3 mb-6">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2563eb]">Order Management</h1>
-            <Image src="/cat-welcome.png" alt="Orders Cat" width={32} height={32} className="w-8 h-8 md:w-10 md:h-10" />
-          </div>
-
-          {/* Search and Filter Section */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-              <div className="relative w-full sm:w-64">
-                <Input
-                  type="text"
-                  placeholder="Search orders..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white border-gray-200 focus:border-[#2563eb] focus:ring-[#2563eb] transition-all duration-200"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full sm:w-auto min-w-[180px] justify-between bg-white hover:bg-gray-50 border-gray-200 hover:border-[#2563eb] text-gray-700 hover:text-[#2563eb] transition-all duration-200 shadow-sm"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Filter className="w-4 h-4" />
-                      <span className="font-medium">{statusLabels[statusFilter]}</span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 ml-2 transition-transform duration-200" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-lg rounded-lg p-1">
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter("all")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-[#2563eb] transition-colors duration-150 cursor-pointer"
-                  >
-                    <ListFilter className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium">All Orders</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter("pending")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-yellow-50 hover:text-yellow-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <Clock className="w-4 h-4 text-yellow-500" />
-                    <span className="font-medium">Pending</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter("process")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-blue-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <Loader2 className="w-4 h-4 text-blue-500" />
-                    <span className="font-medium">In Process</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter("completed")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-green-50 hover:text-green-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span className="font-medium">Completed</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter("cancelled")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <XCircle className="w-4 h-4 text-red-500" />
-                    <span className="font-medium">Cancelled</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="p-4 md:p-8 pt-4">
+      <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto space-y-4">
           {currentOrders.map((order) => (
             <OrderCard

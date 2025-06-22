@@ -1,20 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Plus, ChevronDown, Filter, ListFilter, Coffee, CupSoda, Cookie, Eye, EyeOff, FileText } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import MenuItemCard from "./menu/menu-item-card"
 import AddItemDialog from "./menu/add-item-dialog"
 import EditItemDialog from "./menu/edit-item-dialog"
 import DeleteConfirmationDialog from "@/components/ui/delete-confirmation-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface MenuItem {
   id: string
@@ -25,6 +16,16 @@ interface MenuItem {
   category: "signature" | "nonCoffee" | "snacks"
   popular: boolean
   isDraft: boolean
+}
+
+interface AdminMenuProps {
+  searchTerm?: string
+  statusFilter?: string
+  menuFilter?: "all" | "published" | "draft"
+  menuCategory?: "signature" | "nonCoffee" | "snacks"
+  redemptionFilter?: string
+  addDialogOpen?: boolean
+  setAddDialogOpen?: (open: boolean) => void
 }
 
 // Demo data
@@ -271,21 +272,30 @@ const initialMenuItems: MenuItem[] = [
   },
 ]
 
-export default function AdminMenu() {
+export default function AdminMenu({
+  searchTerm = "",
+  statusFilter = "all",
+  menuFilter = "all",
+  menuCategory = "signature",
+  redemptionFilter = "all",
+  addDialogOpen = false,
+  setAddDialogOpen
+}: AdminMenuProps) {
   const { toast } = useToast()
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems)
-  const [activeCategory, setActiveCategory] = useState<"signature" | "nonCoffee" | "snacks">("signature")
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
-  const [filter, setFilter] = useState<"all" | "published" | "draft">("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null)
 
+  // Use the prop if provided, otherwise use local state
+  const isAddDialogOpen = setAddDialogOpen ? addDialogOpen : false
+  const handleAddDialogChange = setAddDialogOpen || (() => {})
+
   const filteredItems = menuItems
-    .filter((item) => item.category === activeCategory)
+    .filter((item) => item.category === menuCategory)
     .filter((item) => {
-      switch (filter) {
+      switch (menuFilter) {
         case "published":
           return !item.isDraft
         case "draft":
@@ -294,20 +304,26 @@ export default function AdminMenu() {
           return true
       }
     })
+    .filter((item) => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
   // Show toast when category or filter changes
   useEffect(() => {
     // Removed toast notifications for filter and category changes
-  }, [filter, toast])
+  }, [menuFilter, toast])
 
   useEffect(() => {
     // Removed toast notifications for category changes
-  }, [activeCategory, toast])
+  }, [menuCategory, toast])
 
   const handleAddItem = (newItem: Omit<MenuItem, "id">) => {
     const id = (menuItems.length + 1).toString()
     setMenuItems([...menuItems, { ...newItem, id }])
-    setAddDialogOpen(false)
+    if (setAddDialogOpen) {
+      setAddDialogOpen(false)
+    }
     
     toast({
       variant: "success",
@@ -358,108 +374,8 @@ export default function AdminMenu() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0]">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#f5f5f0] border-b border-gray-200 shadow-sm">
-        <div className="p-4 md:p-8 pb-4">
-          {/* Header */}
-          <div className="flex items-center space-x-3 mb-6">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2563eb]">Menu Management</h1>
-            <Image src="/cat-thumbs-up.png" alt="Menu Cat" width={32} height={32} className="w-8 h-8 md:w-10 md:h-10" />
-          </div>
-
-          {/* Filter and Add Button Section */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full sm:w-auto min-w-[180px] justify-between bg-white hover:bg-gray-50 border-gray-200 hover:border-[#2563eb] text-gray-700 hover:text-[#2563eb] transition-all duration-200 shadow-sm"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Filter className="w-4 h-4" />
-                      <span className="font-medium">{filter === "all" ? "All Items" : filter === "published" ? "Published" : "Drafts"}</span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 ml-2 transition-transform duration-200" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-lg rounded-lg p-1">
-                  <DropdownMenuItem 
-                    onClick={() => setFilter("all")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-[#2563eb] transition-colors duration-150 cursor-pointer"
-                  >
-                    <ListFilter className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium">All Items</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setFilter("published")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-green-50 hover:text-green-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <Eye className="w-4 h-4 text-green-500" />
-                    <span className="font-medium">Published</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setFilter("draft")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-yellow-50 hover:text-yellow-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <EyeOff className="w-4 h-4 text-yellow-500" />
-                    <span className="font-medium">Drafts</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full sm:w-auto min-w-[180px] justify-between bg-white hover:bg-gray-50 border-gray-200 hover:border-[#2563eb] text-gray-700 hover:text-[#2563eb] transition-all duration-200 shadow-sm"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4" />
-                      <span className="font-medium">{categoryLabels[activeCategory]}</span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 ml-2 transition-transform duration-200" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-lg rounded-lg p-1">
-                  <DropdownMenuItem 
-                    onClick={() => setActiveCategory("signature")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-[#2563eb] transition-colors duration-150 cursor-pointer"
-                  >
-                    <Coffee className="w-4 h-4 text-[#2563eb]" />
-                    <span className="font-medium">Signature Coffee</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setActiveCategory("nonCoffee")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <CupSoda className="w-4 h-4 text-purple-500" />
-                    <span className="font-medium">Non Coffee</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setActiveCategory("snacks")}
-                    className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-orange-50 hover:text-orange-700 transition-colors duration-150 cursor-pointer"
-                  >
-                    <Cookie className="w-4 h-4 text-orange-500" />
-                    <span className="font-medium">Snacks</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-              className="w-full sm:w-auto bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Item
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="p-4 md:p-8 pt-4">
+      <div className="p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredItems.map((item) => (
@@ -476,8 +392,8 @@ export default function AdminMenu() {
           </div>
 
           <AddItemDialog
-            open={addDialogOpen}
-            onOpenChange={setAddDialogOpen}
+            open={isAddDialogOpen}
+            onOpenChange={handleAddDialogChange}
             onAddItem={handleAddItem}
           />
 

@@ -1,18 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Clock, Eye, CheckCircle, XCircle, Gift, ChevronLeft, ChevronRight, ChevronDown, Filter, ListFilter } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Clock, Eye, CheckCircle, XCircle, Gift, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface Redemption {
@@ -24,6 +17,10 @@ interface Redemption {
   pointsCost: number
   date: string
   status: "pending" | "completed" | "cancelled"
+}
+
+interface AdminRedemptionsProps {
+  redemptionFilter?: "all" | "pending" | "completed" | "cancelled"
 }
 
 // Dummy redemption data
@@ -232,25 +229,26 @@ const dummyRedemptions: Redemption[] = [
 
 const ITEMS_PER_PAGE = 5
 
-export default function AdminRedemptions() {
+export default function AdminRedemptions({
+  redemptionFilter = "all"
+}: AdminRedemptionsProps) {
   const { toast } = useToast()
   const [redemptions, setRedemptions] = useState<Redemption[]>(dummyRedemptions)
   const [selectedRedemption, setSelectedRedemption] = useState<Redemption | null>(null)
   const [showRedemptionDialog, setShowRedemptionDialog] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "completed" | "cancelled">("all")
 
   useEffect(() => {
     // Filter redemptions based on status
     const filtered = dummyRedemptions.filter((redemption: Redemption) =>
-      statusFilter === "all" || redemption.status === statusFilter
+      redemptionFilter === "all" || redemption.status === redemptionFilter
     )
     setRedemptions(
       filtered.sort((a: Redemption, b: Redemption) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     )
     
     // Removed toast notification for filter changes
-  }, [statusFilter, toast])
+  }, [redemptionFilter, toast])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -321,67 +319,8 @@ export default function AdminRedemptions() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0]">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#f5f5f0] border-b border-gray-200 shadow-sm">
-        <div className="p-4 md:p-8 pb-4">
-          {/* Header */}
-          <div className="flex items-center space-x-3 mb-6">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2563eb]">Redemption Management</h1>
-            <Image src="/cat-thumbs-up.png" alt="Redemption Cat" width={32} height={32} className="w-8 h-8 md:w-10 md:h-10" />
-          </div>
-
-          {/* Filter Section */}
-          <div className="flex items-center justify-between">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto min-w-[180px] justify-between bg-white hover:bg-gray-50 border-gray-200 hover:border-[#2563eb] text-gray-700 hover:text-[#2563eb] transition-all duration-200 shadow-sm"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Filter className="w-4 h-4" />
-                    <span className="font-medium">{statusLabels[statusFilter]}</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 ml-2 transition-transform duration-200" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-lg rounded-lg p-1">
-                <DropdownMenuItem 
-                  onClick={() => setStatusFilter("all")}
-                  className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-[#2563eb] transition-colors duration-150 cursor-pointer"
-                >
-                  <ListFilter className="w-4 h-4 text-gray-500" />
-                  <span className="font-medium">All Redemptions</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setStatusFilter("pending")}
-                  className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-yellow-50 hover:text-yellow-700 transition-colors duration-150 cursor-pointer"
-                >
-                  <Clock className="w-4 h-4 text-yellow-500" />
-                  <span className="font-medium">Pending</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setStatusFilter("completed")}
-                  className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-green-50 hover:text-green-700 transition-colors duration-150 cursor-pointer"
-                >
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="font-medium">Completed</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setStatusFilter("cancelled")}
-                  className="flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors duration-150 cursor-pointer"
-                >
-                  <XCircle className="w-4 h-4 text-red-500" />
-                  <span className="font-medium">Cancelled</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="p-4 md:p-8 pt-4">
+      <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Redemptions List */}
           <div className="max-w-6xl mx-auto space-y-4">
