@@ -1,26 +1,14 @@
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Clock, Play, CheckCircle, XCircle, Trash2, AlertTriangle } from "lucide-react"
 import OrderStatusBadge from "./order-status-badge"
-
-interface OrderItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
-
-interface Order {
-  id: string
-  items: OrderItem[]
-  total: number
-  date: Date
-  status: "pending" | "process" | "completed" | "cancelled"
-  type: "online" | "offline"
-  customerName?: string
-  customerEmail?: string
-  customerPhone?: string
-}
+import { Order } from "@/types"
 
 interface OrderDetailsDialogProps {
   open: boolean
@@ -53,9 +41,12 @@ export default function OrderDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Order Details</DialogTitle>
+          <DialogTitle className="text-2xl">Order Details #{order.id}</DialogTitle>
+          <DialogDescription>
+            View and manage order details
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -66,7 +57,7 @@ export default function OrderDetailsDialog({
               <div className="flex items-center justify-center space-x-2">
                 <Clock className="w-4 h-4" />
                 <span>
-                  {order.date.toLocaleDateString("id-ID", {
+                  {new Date(order.date).toLocaleDateString("id-ID", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",

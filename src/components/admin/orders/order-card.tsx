@@ -2,35 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Clock, Eye, Play, CheckCircle, XCircle, Trash2, AlertTriangle } from "lucide-react"
 import OrderStatusBadge from "./order-status-badge"
-
-interface OrderItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
-
-interface Order {
-  id: string
-  items: OrderItem[]
-  total: number
-  date: Date
-  status: "pending" | "process" | "completed" | "cancelled"
-  type: "online" | "offline"
-  customerName?: string
-  customerEmail?: string
-  customerPhone?: string
-}
-
-interface OrderCardProps {
-  order: Order
-  countdown?: number
-  onView: (order: Order) => void
-  onProcess: (orderId: string) => void
-  onComplete: (orderId: string) => void
-  onCancel: (orderId: string) => void
-  onDelete: (orderId: string) => void
-}
+import { Order, OrderItem, OrderCardProps } from "@/types"
 
 export default function OrderCard({
   order,

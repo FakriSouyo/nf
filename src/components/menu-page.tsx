@@ -1,316 +1,34 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Search, Plus, Minus, ShoppingCart, AlertTriangle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useCart } from "@/hooks/use-cart"
 
-const menuCategories = {
-  signature: [
-    {
-      id: 1,
-      name: "Nefo Original",
-      description: "Kopi original buatan nefo",
-      price: 8000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 2,
-      name: "Caramel Macchiato",
-      description: "Sweet caramel with espresso",
-      price: 12000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 3,
-      name: "Nefo Special",
-      description: "Our signature blend",
-      price: 15000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 9,
-      name: "Espresso Shot",
-      description: "Pure coffee essence",
-      price: 6000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 10,
-      name: "Cappuccino Classic",
-      description: "Perfect balance of espresso and milk",
-      price: 14000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 11,
-      name: "Mocha Delight",
-      description: "Chocolate and coffee harmony",
-      price: 16000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 12,
-      name: "Americano Bold",
-      description: "Strong and smooth",
-      price: 10000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 13,
-      name: "Latte Art",
-      description: "Beautiful latte with art",
-      price: 18000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 14,
-      name: "Flat White",
-      description: "Australian coffee style",
-      price: 17000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 15,
-      name: "Ristretto",
-      description: "Concentrated espresso shot",
-      price: 7000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-  ],
-  nonCoffee: [
-    {
-      id: 4,
-      name: "Velly",
-      description: "Red velvet khas nefo",
-      price: 15000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 5,
-      name: "Matcha Latte",
-      description: "Premium matcha blend",
-      price: 18000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 6,
-      name: "Chocolate Frappe",
-      description: "Rich chocolate delight",
-      price: 20000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 16,
-      name: "Strawberry Smoothie",
-      description: "Fresh strawberry blend",
-      price: 22000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 17,
-      name: "Mango Tango",
-      description: "Tropical mango delight",
-      price: 19000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 18,
-      name: "Vanilla Milkshake",
-      description: "Creamy vanilla goodness",
-      price: 16000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 19,
-      name: "Blueberry Blast",
-      description: "Antioxidant rich smoothie",
-      price: 24000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 20,
-      name: "Pineapple Paradise",
-      description: "Refreshing pineapple drink",
-      price: 21000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 21,
-      name: "Coconut Dream",
-      description: "Tropical coconut milk",
-      price: 18000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 22,
-      name: "Banana Boost",
-      description: "Energy packed banana smoothie",
-      price: 17000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-  ],
-  snacks: [
-    {
-      id: 7,
-      name: "Croissant",
-      description: "Buttery and flaky pastry",
-      price: 8000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 8,
-      name: "Cheesecake",
-      description: "Creamy New York style",
-      price: 25000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 23,
-      name: "Chocolate Brownie",
-      description: "Rich chocolate brownie",
-      price: 12000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 24,
-      name: "Tiramisu",
-      description: "Italian coffee dessert",
-      price: 28000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 25,
-      name: "Blueberry Muffin",
-      description: "Fresh blueberry muffin",
-      price: 9000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 26,
-      name: "Chocolate Chip Cookie",
-      description: "Classic chocolate chip cookie",
-      price: 6000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 27,
-      name: "Apple Pie",
-      description: "Homemade apple pie",
-      price: 15000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 28,
-      name: "Strawberry Tart",
-      description: "Fresh strawberry tart",
-      price: 18000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: true,
-    },
-    {
-      id: 29,
-      name: "Cinnamon Roll",
-      description: "Warm cinnamon roll",
-      price: 11000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-    {
-      id: 30,
-      name: "Lemon Cake",
-      description: "Zesty lemon cake",
-      price: 14000,
-      image: "/placeholder.svg?height=200&width=200",
-      popular: false,
-    },
-  ],
-}
+// Components
+import MenuHeader from "@/components/user/menu/menu-header"
+import MenuItemCard from "@/components/user/menu/menu-item-card"
+import OrderDialog from "@/components/user/menu/order-dialog"
+import FloatingCartButton from "@/components/user/menu/floating-cart-button"
 
-interface CartItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
+// Types and Data
+import { CategoryType } from "@/types/menu"
+import { menuCategories } from "@/data/menu-items"
 
 export default function MenuPage() {
   const { toast } = useToast()
-  const [activeCategory, setActiveCategory] = useState<"signature" | "nonCoffee" | "snacks">("signature")
+  const [activeCategory, setActiveCategory] = useState<CategoryType>("signature")
   const [searchQuery, setSearchQuery] = useState("")
-  const [cart, setCart] = useState<CartItem[]>([])
   const [showOrderDialog, setShowOrderDialog] = useState(false)
 
-  const addToCart = (item: any) => {
-    setCart((prev) => {
-      const existingItem = prev.find((cartItem) => cartItem.id === item.id)
-      if (existingItem) {
-        return prev.map((cartItem) =>
-          cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem,
-        )
-      } else {
-        return [...prev, { ...item, quantity: 1 }]
-      }
-    })
-  }
-
-  const removeFromCart = (itemId: number) => {
-    setCart((prev) => {
-      const existingItem = prev.find((item) => item.id === itemId)
-      if (existingItem && existingItem.quantity > 1) {
-        return prev.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity - 1 } : item,
-        )
-      } else {
-        return prev.filter((item) => item.id !== itemId)
-      }
-    })
-  }
-
-  const getCartItemQuantity = (itemId: number) => {
-    const item = cart.find((cartItem) => cartItem.id === itemId)
-    return item ? item.quantity : 0
-  }
-
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0)
-  }
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0)
-  }
+  const {
+    cart,
+    addToCart,
+    removeFromCart,
+    getCartItemQuantity,
+    getTotalPrice,
+    getTotalItems,
+    clearCart,
+  } = useCart()
 
   const handleCreateOrder = () => {
     // Create order object
@@ -328,7 +46,7 @@ export default function MenuPage() {
     localStorage.setItem("orderHistory", JSON.stringify([order, ...existingOrders]))
 
     // Clear cart
-    setCart([])
+    clearCart()
     setShowOrderDialog(false)
 
     // Show success toast
@@ -345,216 +63,44 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0]">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#f5f5f0] border-b border-gray-200 shadow-sm">
-        <div className="p-4 md:p-8 pb-4">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-[#2563eb] mb-2">Menu</h1>
-              <p className="text-gray-600">Choose your perfect coffee experience</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Image src="/cat-thumbs-up.png" alt="Cat Thumbs Up" width={40} height={40} className="w-10 h-10" />
-            </div>
-          </div>
-
-          {/* Search and Category Section */}
-          <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Search menu..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white border-gray-200 focus:border-[#2563eb]"
-              />
-            </div>
-
-            {/* Category Tabs */}
-            <div className="flex space-x-4 overflow-x-auto">
-              <button
-                onClick={() => setActiveCategory("signature")}
-                className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                  activeCategory === "signature"
-                    ? "bg-[#2563eb] text-white shadow-lg"
-                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                }`}
-              >
-                Signature Coffee
-              </button>
-              <button
-                onClick={() => setActiveCategory("nonCoffee")}
-                className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                  activeCategory === "nonCoffee"
-                    ? "bg-[#2563eb] text-white shadow-lg"
-                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                }`}
-              >
-                Non Coffee
-              </button>
-              <button
-                onClick={() => setActiveCategory("snacks")}
-                className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                  activeCategory === "snacks"
-                    ? "bg-[#2563eb] text-white shadow-lg"
-                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                }`}
-              >
-                Snacks
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <MenuHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+      />
 
       {/* Content */}
       <div className="p-4 md:p-8 pt-4">
         {/* Menu Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredItems.map((item) => (
-            <Card key={item.id} className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-0">
-                <div className="relative">
-                  <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 p-6 flex items-center justify-center">
-                    <Image
-                      src={item.image || "/placeholder.svg?height=150&width=150"}
-                      alt={item.name}
-                      width={150}
-                      height={150}
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  </div>
-                  {item.popular && (
-                    <Badge className="absolute top-3 left-3 bg-orange-500 text-white hover:bg-orange-500">Popular</Badge>
-                  )}
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold text-[#2563eb]">Rp {item.price.toLocaleString("id-ID")}</div>
-                    <div className="flex items-center space-x-2">
-                      {getCartItemQuantity(item.id) > 0 ? (
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => removeFromCart(item.id)}
-                            className="w-8 h-8 p-0"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="font-bold text-[#2563eb] min-w-[20px] text-center">
-                            {getCartItemQuantity(item.id)}
-                          </span>
-                          <Button
-                            size="sm"
-                            onClick={() => addToCart(item)}
-                            className="w-8 h-8 p-0 bg-[#2563eb] hover:bg-[#1d4ed8]"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => addToCart(item)}
-                          className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
-                        >
-                          Add to Cart
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              quantity={getCartItemQuantity(item.id)}
+              onAdd={addToCart}
+              onRemove={removeFromCart}
+            />
           ))}
         </div>
 
-        {/* Floating Cart */}
+        {/* Floating Cart Button */}
         {getTotalItems() > 0 && (
-          <div className="fixed bottom-24 right-6 z-40">
-            <Button
-              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-full p-4 shadow-2xl"
-              onClick={() => setShowOrderDialog(true)}
-            >
-              <ShoppingCart className="w-6 h-6 mr-2" />
-              <span className="font-bold">{getTotalItems()}</span>
-              <span className="mx-2">•</span>
-              <span>Rp {getTotalPrice().toLocaleString("id-ID")}</span>
-            </Button>
-          </div>
+          <FloatingCartButton
+            totalItems={getTotalItems()}
+            totalPrice={getTotalPrice()}
+            onClick={() => setShowOrderDialog(true)}
+          />
         )}
 
         {/* Order Dialog */}
-        <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
-          <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-center text-2xl font-bold text-[#2563eb]">Order Summary</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Order Items */}
-              <div className="space-y-4">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900">{item.name}</h4>
-                      <p className="text-sm text-gray-600">
-                        Rp {item.price.toLocaleString("id-ID")} x {item.quantity}
-                      </p>
-                    </div>
-                    <div className="font-bold text-[#2563eb]">
-                      Rp {(item.price * item.quantity).toLocaleString("id-ID")}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Total */}
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between text-xl font-bold">
-                  <span>Total:</span>
-                  <span className="text-[#2563eb]">Rp {getTotalPrice().toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-
-              {/* Maintenance Notice */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                  <h4 className="font-bold text-yellow-800">Online Payment Under Maintenance</h4>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  Online payment is currently under maintenance. Please visit our store to complete your order. Your order
-                  will be saved to history for reference.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-3">
-                <Button
-                  onClick={() => setShowOrderDialog(false)}
-                  variant="outline"
-                  className="flex-1 text-gray-600 border-gray-300"
-                >
-                  Continue Shopping
-                </Button>
-                <Button onClick={handleCreateOrder} className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
-                  Save Order
-                </Button>
-              </div>
-
-              <div className="text-center text-sm text-gray-500">
-                Order will be saved to your history. Visit our store to complete the purchase.
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <OrderDialog
+          open={showOrderDialog}
+          onOpenChange={setShowOrderDialog}
+          cart={cart}
+          onCreateOrder={handleCreateOrder}
+        />
       </div>
     </div>
   )

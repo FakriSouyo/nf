@@ -11,62 +11,7 @@ import NotificationDialog from "./dashboard/dialogs/notification-dialog"
 import UserDialog from "./dashboard/dialogs/user-dialog"
 import VoucherDialog from "./dashboard/dialogs/voucher-dialog"
 import RewardDialog from "./dashboard/dialogs/reward-dialog"
-
-const demoUsers = [
-  { id: 1, name: "Coffee Lover", email: "demo@nefocoffee.com", totalCups: 47, points: 85, locked: true },
-  { id: 2, name: "John Doe", email: "john@example.com", totalCups: 23, points: 45, locked: true },
-  { id: 3, name: "Jane Smith", email: "jane@example.com", totalCups: 31, points: 62, locked: true },
-]
-
-const demoVouchers = [
-  { id: 1, title: "Nefo Original", discount: "20%", active: true },
-  { id: 2, title: "Caramel Macchiato", discount: "15%", active: true },
-  { id: 3, title: "Free Upgrade", discount: "FREE", active: false },
-]
-
-const demoRewards = [
-  {
-    id: "1",
-    name: "Free Coffee",
-    description: "Get any signature drink for free",
-    pointsCost: 100,
-    image: "/placeholder.svg?height=150&width=150",
-    available: true,
-  },
-  {
-    id: "2",
-    name: "Nefo Tumbler",
-    description: "Exclusive Nefo Coffee tumbler",
-    pointsCost: 150,
-    image: "/placeholder.svg?height=150&width=150",
-    available: true,
-  },
-  {
-    id: "3",
-    name: "Coffee Beans 250g",
-    description: "Premium coffee beans to take home",
-    pointsCost: 200,
-    image: "/placeholder.svg?height=150&width=150",
-    available: true,
-  },
-]
-
-const notificationCategories = [
-  { id: "promotion", name: "Promotion", icon: Star, color: "text-orange-600" },
-  { id: "reward", name: "Reward", icon: Gift, color: "text-green-600" },
-  { id: "system", name: "System", icon: Bell, color: "text-gray-600" },
-]
-
-// Sample sales data for the chart
-const salesData = [
-  { day: "Mon", sales: 850000 },
-  { day: "Tue", sales: 1200000 },
-  { day: "Wed", sales: 950000 },
-  { day: "Thu", sales: 1500000 },
-  { day: "Fri", sales: 1800000 },
-  { day: "Sat", sales: 2200000 },
-  { day: "Sun", sales: 1600000 },
-]
+import { demoUsers, demoVouchers, demoRewards, notificationCategories, salesData } from "@/data/admin"
 
 export default function AdminDashboard() {
   const { toast } = useToast()

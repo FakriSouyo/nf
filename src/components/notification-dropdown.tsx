@@ -6,42 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Gift, Coffee, Star, Bell } from "lucide-react"
-
-interface Notification {
-  id: string
-  title: string
-  message: string
-  type: "reward" | "order" | "promotion" | "system"
-  date: Date
-  read: boolean
-}
-
-const sampleNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "New Reward Available!",
-    message: "You've earned enough points for a free coffee! Check out the rewards section.",
-    type: "reward",
-    date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Welcome to Nefo Coffee!",
-    message: "Thanks for joining us! Enjoy your coffee journey with exclusive perks and rewards.",
-    type: "system",
-    date: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    read: false,
-  },
-  {
-    id: "3",
-    title: "Special Promotion",
-    message: "Get 20% off on all signature drinks this weekend! Don't miss out.",
-    type: "promotion",
-    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    read: true,
-  },
-]
+import { Notification } from "@/types"
+import { demoNotifications } from "@/data/user"
 
 interface NotificationDropdownProps {
   onClose: () => void
@@ -49,7 +15,7 @@ interface NotificationDropdownProps {
 }
 
 export default function NotificationDropdown({ onClose, onNotificationRead }: NotificationDropdownProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>(demoNotifications)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [showNotificationDialog, setShowNotificationDialog] = useState(false)
 
@@ -90,7 +56,8 @@ export default function NotificationDropdown({ onClose, onNotificationRead }: No
     }
   }
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
 
@@ -161,7 +128,7 @@ export default function NotificationDropdown({ onClose, onNotificationRead }: No
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>
                   Received:{" "}
-                  {selectedNotification.date.toLocaleDateString("id-ID", {
+                  {new Date(selectedNotification.date).toLocaleDateString("id-ID", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",

@@ -6,23 +6,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
-
-interface MenuItem {
-  id: string
-  name: string
-  description: string
-  price: string
-  image: string
-  category: "signature" | "nonCoffee" | "snacks"
-  popular: boolean
-  isDraft: boolean
-}
+import { MenuItem } from "@/types"
 
 interface EditItemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item: MenuItem | null
-  onEditItem: (id: string, updatedItem: Omit<MenuItem, "id">) => void
+  onEditItem: (id: string | number, updatedItem: Omit<MenuItem, "id">) => void
 }
 
 export default function EditItemDialog({ open, onOpenChange, item, onEditItem }: EditItemDialogProps) {

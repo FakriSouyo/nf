@@ -3,17 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Edit, Trash2 } from "lucide-react"
-
-interface MenuItem {
-  id: string
-  name: string
-  description: string
-  price: string
-  image: string
-  category: "signature" | "nonCoffee" | "snacks"
-  popular: boolean
-  isDraft: boolean
-}
+import { MenuItem } from "@/types"
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -49,7 +39,7 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
           <p className="text-gray-600 text-sm mb-4">{item.description}</p>
           <div className="flex items-center justify-between mb-4">
             <div className="text-2xl font-bold text-[#2563eb]">
-              Rp {parseInt(item.price).toLocaleString("id-ID")}
+              Rp {typeof item.price === 'string' ? parseInt(item.price) : item.price.toLocaleString("id-ID")}
             </div>
           </div>
           <div className="flex items-center space-x-2">

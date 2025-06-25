@@ -2,19 +2,7 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-
-interface User {
-  id: number
-  name: string
-  email: string
-  points: number
-  vouchers: {
-    id: string
-    title: string
-    discount: string
-    description: string
-  }[]
-}
+import { User } from "@/types"
 
 interface UserSelectDialogProps {
   open: boolean
@@ -56,7 +44,7 @@ export default function UserSelectDialog({
                     <div>
                       <h4 className="font-bold text-gray-900">{user.name}</h4>
                       <p className="text-sm text-gray-600">{user.email}</p>
-                      {user.vouchers.length > 0 && (
+                      {user.vouchers && user.vouchers.length > 0 && (
                         <p className="text-xs text-green-600">{user.vouchers.length} voucher(s) available</p>
                       )}
                     </div>
